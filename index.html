@@ -63,6 +63,22 @@
             background: #27ae60;
             box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
         }
+        /* === STYLE LOGO DI BAWAH === */
+        #logo-container {
+            margin-top: 30px; /* Jarak dari tombol ke logo */
+            display: flex;
+            gap: 20px; /* Jarak antar logo */
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding-bottom: 20px;
+        }
+        #logo-container img {
+            height: 50px; /* Ukuran kecil sesuai permintaan */
+            width: auto; /* Menjaga rasio asli gambar */
+            object-fit: contain;
+            filter: drop-shadow(0 0 3px rgba(255,255,255,0.3));
+        }
     </style>
 </head>
 <body>
@@ -75,6 +91,14 @@
     <div class="tombol">
         <button onclick="mulaiGame()">🎮 Mulai Main</button>
         <button onclick="resetGame()">🔄 Ulangi</button>
+    </div>
+
+    <!-- TEMPAT MENAMPILKAN LOGO - BERURUTAN DI BAWAH -->
+    <div id="logo-container">
+        <img src="https://raw.githubusercontent.com/lutpiananurmasari/bertahandilabirin/72c26577ec18da5f5e1d6aa7c04f124b03b5c638/logoones.jpeg" alt="Logo 1">
+        <img src="https://raw.githubusercontent.com/lutpiananurmasari/bertahandilabirin/72c26577ec18da5f5e1d6aa7c04f124b03b5c638/logopkmoko.jpeg" alt="Logo 2">
+        <img src="https://raw.githubusercontent.com/lutpiananurmasari/bertahandilabirin/72c26577ec18da5f5e1d6aa7c04f124b03b5c638/logorpl.jpeg" alt="Logo 3">
+        <img src="https://raw.githubusercontent.com/lutpiananurmasari/bertahandilabirin/72c26577ec18da5f5e1d6aa7c04f124b03b5c638/logosmk.jpeg" alt="Logo 4">
     </div>
 
     <script>
