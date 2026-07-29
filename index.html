@@ -19,6 +19,12 @@
             font-size: 2.3rem;
             color: #ffdd00;
             text-shadow: 0 0 10px #ffdd00;
+            margin-bottom: 10px;
+        }
+        #infoLevel {
+            font-size: 1.4rem;
+            color: #2ecc71;
+            font-weight: bold;
             margin-bottom: 15px;
         }
         #notifikasi {
@@ -65,17 +71,17 @@
         }
         /* === STYLE LOGO DI BAWAH === */
         #logo-container {
-            margin-top: 30px; /* Jarak dari tombol ke logo */
+            margin-top: 30px;
             display: flex;
-            gap: 20px; /* Jarak antar logo */
+            gap: 20px;
             align-items: center;
             justify-content: center;
             flex-wrap: wrap;
             padding-bottom: 20px;
         }
         #logo-container img {
-            height: 50px; /* Ukuran kecil sesuai permintaan */
-            width: auto; /* Menjaga rasio asli gambar */
+            height: 50px;
+            width: auto;
             object-fit: contain;
             filter: drop-shadow(0 0 3px rgba(255,255,255,0.3));
         }
@@ -84,6 +90,7 @@
 <body>
 
     <h1>🧭 BERTAHAN DI LABIRIN 🧭</h1>
+    <div id="infoLevel">Level: 1 / 10</div>
     <div id="notifikasi"></div>
 
     <canvas id="gameCanvas" width="600" height="600"></canvas>
@@ -93,7 +100,7 @@
         <button onclick="resetGame()">🔄 Ulangi</button>
     </div>
 
-    <!-- TEMPAT MENAMPILKAN LOGO - BERURUTAN DI BAWAH -->
+    <!-- LOGO DI BAWAH -->
     <div id="logo-container">
         <img src="https://raw.githubusercontent.com/lutpiananurmasari/bertahandilabirin/72c26577ec18da5f5e1d6aa7c04f124b03b5c638/logoones.jpeg" alt="Logo 1">
         <img src="https://raw.githubusercontent.com/lutpiananurmasari/bertahandilabirin/72c26577ec18da5f5e1d6aa7c04f124b03b5c638/logopkmoko.jpeg" alt="Logo 2">
@@ -106,27 +113,196 @@
         const ctx = canvas.getContext('2d');
         const ukuranKotak = 40;
         let gameJalan = false;
+        let levelSekarang = 1;
+        const totalLevel = 10;
 
-        // Peta Labirin: 1 = Dinding, 0 = Jalan, 2 = Keluar
-        const labirin = [
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
-            [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
-            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-            [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
-            [1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
-            [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
-            [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
-            [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
-            [1,0,1,1,1,1,1,1,1,0,1,1,1,1,1],
-            [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-            [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
-            [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
-            [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+        // === KUMPULAN PETA 1-10 ===
+        const semuaLabirin = [
+            // Level 1 (Mudah)
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,0,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,1,1,1,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,1,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,1,0,0,0,0,0,1],
+                [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 2
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 3
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,0,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,1,1,1,1,0,1,0,1,0,1,1,1,0,1],
+                [1,0,0,0,1,0,1,0,1,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 4
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+                [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 5
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,0,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,0,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 6
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,0,1,0,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 7
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,0,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,1,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,1,1,1,1,0,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 8
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 9
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,0,1,0,1,1,1,1,1,0,1,1,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+                [1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,1,0,1,0,1],
+                [1,0,1,1,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,1,1,0,1,1,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+                [1,0,1,1,1,0,1,1,1,1,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ],
+            // Level 10 (Paling Sulit)
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,0,0,0,1,0,1,0,0,0,1,0,0,0,1],
+                [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+                [1,0,1,0,0,0,1,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,0,1,0,1,1,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+                [1,1,1,0,1,1,1,1,1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,1,1,1,1,0,1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1],
+                [1,1,1,1,1,0,1,1,1,0,1,0,1,0,1],
+                [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
+                [1,0,1,0,1,1,1,0,1,1,1,1,1,0,1],
+                [1,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+            ]
         ];
 
-        // Posisi Pemain (Mulai di pojok kiri atas)
+        let labirinSekarang = [];
+
+        // Posisi Pemain
         const pemain = { x: 1, y: 1, warna: '#3498db' };
 
         const tombol = {};
@@ -142,30 +318,37 @@
             setTimeout(() => n.style.display = 'none', 3000);
         }
 
+        function updateInfoLevel() {
+            document.getElementById('infoLevel').innerText = `Level: ${levelSekarang} / ${totalLevel}`;
+        }
+
         function mulaiGame() {
             if (gameJalan) return;
             gameJalan = true;
-            notifikasi('Cari jalan keluar di pojok kanan bawah! 🚪');
+            labirinSekarang = JSON.parse(JSON.stringify(semuaLabirin[levelSekarang - 1]));
+            pemain.x = 1; pemain.y = 1;
+            updateInfoLevel();
+            notifikasi(`🚀 Mulai Level ${levelSekarang}! Cari jalan keluar hijau!`);
             loopGame();
         }
 
         function resetGame() {
             gameJalan = false;
+            levelSekarang = 1;
             pemain.x = 1; pemain.y = 1;
+            labirinSekarang = JSON.parse(JSON.stringify(semuaLabirin[0]));
+            updateInfoLevel();
             gambarSemua();
         }
 
         function loopGame() {
             if (!gameJalan) return;
-
             gerakPemain();
             cekKeluar();
             gambarSemua();
-
             requestAnimationFrame(loopGame);
         }
 
-        // === KONTROL PEMAIN ===
         function gerakPemain() {
             let baruX = pemain.x;
             let baruY = pemain.y;
@@ -175,37 +358,46 @@
             else if (tombol['ArrowLeft']) baruX--;
             else if (tombol['ArrowRight']) baruX++;
 
-            // Cek apakah bisa jalan (tidak menabrak dinding)
-            if (labirin[baruY][baruX] !== 1) {
+            // Cek tembus jalan & keluar (hijau)
+            if (labirinSekarang[baruY][baruX] !== 1) {
                 pemain.x = baruX;
                 pemain.y = baruY;
             }
         }
 
-        // === CEK JIKA SAMPAI KELUAR ===
         function cekKeluar() {
-            if (labirin[pemain.y][pemain.x] === 2) {
+            if (labirinSekarang[pemain.y][pemain.x] === 2) {
                 gameJalan = false;
-                notifikasi('🎉 SELAMAT! Kamu Berhasil Keluar!');
+                if (levelSekarang < totalLevel) {
+                    notifikasi(`✅ Level ${levelSekarang} Selesai! Lanjut ke Level ${levelSekarang + 1}`);
+                    levelSekarang++;
+                    setTimeout(() => {
+                        labirinSekarang = JSON.parse(JSON.stringify(semuaLabirin[levelSekarang - 1]));
+                        pemain.x = 1; pemain.y = 1;
+                        updateInfoLevel();
+                        gameJalan = true;
+                        loopGame();
+                    }, 1500);
+                } else {
+                    notifikasi('🏆 SELAMAT! Kamu Menyelesaikan Semua 10 Level!');
+                }
             }
         }
 
-        // === GAMBAR SEMUA ===
         function gambarSemua() {
             gambarLabirin();
             gambarPemain();
         }
 
-        // === GAMBAR PETA ===
         function gambarLabirin() {
-            for(let y = 0; y < labirin.length; y++) {
-                for(let x = 0; x < labirin[y].length; x++) {
-                    if (labirin[y][x] === 1) {
+            for(let y = 0; y < labirinSekarang.length; y++) {
+                for(let x = 0; x < labirinSekarang[y].length; x++) {
+                    if (labirinSekarang[y][x] === 1) {
                         ctx.fillStyle = '#2c3e50'; // Dinding
-                    } else if (labirin[y][x] === 2) {
-                        ctx.fillStyle = '#2ecc71'; // Keluar (Hijau)
+                    } else if (labirinSekarang[y][x] === 2) {
+                        ctx.fillStyle = '#2ecc71'; // Keluar Hijau
                     } else {
-                        ctx.fillStyle = '#ecf0f1'; // Jalan
+                        ctx.fillStyle = '#ecf0f1'; // Jalan Putih
                     }
                     ctx.fillRect(x*ukuranKotak, y*ukuranKotak, ukuranKotak, ukuranKotak);
                     ctx.strokeStyle = '#bdc3c7';
@@ -214,7 +406,6 @@
             }
         }
 
-        // === GAMBAR PEMAIN ===
         function gambarPemain() {
             ctx.fillStyle = pemain.warna;
             ctx.shadowColor = '#2980b9';
@@ -229,7 +420,9 @@
             ctx.shadowBlur = 0;
         }
 
-        // Tampilan awal
+        // Inisialisasi awal
+        labirinSekarang = JSON.parse(JSON.stringify(semuaLabirin[0]));
+        updateInfoLevel();
         gambarLabirin();
     </script>
 </body>
