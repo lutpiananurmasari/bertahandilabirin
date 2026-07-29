@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bertahan di Labirin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(to bottom, #1a252f, #2c3e50);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+        h1 {
+            font-size: 2.3rem;
+            color: #ffdd00;
+            text-shadow: 0 0 10px #ffdd00;
+            margin-bottom: 15px;
+        }
+        #notifikasi {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #27ae60;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.3rem;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        #gameCanvas {
+            border: 4px solid #3498db;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.4);
+            background: #ecf0f1;
+        }
+        .tombol {
+            margin-top: 15px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 22px;
+            background: #2ecc71;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        button:hover {
+            background: #27ae60;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🧭 BERTAHAN DI LABIRIN 🧭</h1>
+    <div id="notifikasi"></div>
+
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <div class="tombol">
+        <button onclick="mulaiGame()">🎮 Mulai Main</button>
+        <button onclick="resetGame()">🔄 Ulangi</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const ukuranKotak = 40;
+        let gameJalan = false;
+
+        // Peta Labirin: 1 = Dinding, 0 = Jalan, 2 = Keluar
+        const labirin = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+            [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+            [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
+            [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
+            [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
+            [1,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,0,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,2,1]
+        ];
+
+        // Posisi Pemain (Mulai di pojok kiri atas)
+        const pemain = { x: 1, y: 1, warna: '#3498db' };
+
+        const tombol = {};
+        window.addEventListener('keydown', e => {
+            tombol[e.key] = true;
+            if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+        });
+        window.addEventListener('keyup', e => tombol[e.key] = false);
+
+        function notifikasi(teks) {
+            const n = document.getElementById('notifikasi');
+            n.innerText = teks; n.style.display = 'block';
+            setTimeout(() => n.style.display = 'none', 3000);
+        }
+
+        function mulaiGame() {
+            if (gameJalan) return;
+            gameJalan = true;
+            notifikasi('Cari jalan keluar di pojok kanan bawah! 🚪');
+            loopGame();
+        }
+
+        function resetGame() {
+            gameJalan = false;
+            pemain.x = 1; pemain.y = 1;
+            gambarSemua();
+        }
+
+        function loopGame() {
+            if (!gameJalan) return;
+
+            gerakPemain();
+            cekKeluar();
+            gambarSemua();
+
+            requestAnimationFrame(loopGame);
+        }
+
+        // === KONTROL PEMAIN ===
+        function gerakPemain() {
+            let baruX = pemain.x;
+            let baruY = pemain.y;
+
+            if (tombol['ArrowUp']) baruY--;
+            else if (tombol['ArrowDown']) baruY++;
+            else if (tombol['ArrowLeft']) baruX--;
+            else if (tombol['ArrowRight']) baruX++;
+
+            // Cek apakah bisa jalan (tidak menabrak dinding)
+            if (labirin[baruY][baruX] !== 1) {
+                pemain.x = baruX;
+                pemain.y = baruY;
+            }
+        }
+
+        // === CEK JIKA SAMPAI KELUAR ===
+        function cekKeluar() {
+            if (labirin[pemain.y][pemain.x] === 2) {
+                gameJalan = false;
+                notifikasi('🎉 SELAMAT! Kamu Berhasil Keluar!');
+            }
+        }
+
+        // === GAMBAR SEMUA ===
+        function gambarSemua() {
+            gambarLabirin();
+            gambarPemain();
+        }
+
+        // === GAMBAR PETA ===
+        function gambarLabirin() {
+            for(let y = 0; y < labirin.length; y++) {
+                for(let x = 0; x < labirin[y].length; x++) {
+                    if (labirin[y][x] === 1) {
+                        ctx.fillStyle = '#2c3e50'; // Dinding
+                    } else if (labirin[y][x] === 2) {
+                        ctx.fillStyle = '#2ecc71'; // Keluar (Hijau)
+                    } else {
+                        ctx.fillStyle = '#ecf0f1'; // Jalan
+                    }
+                    ctx.fillRect(x*ukuranKotak, y*ukuranKotak, ukuranKotak, ukuranKotak);
+                    ctx.strokeStyle = '#bdc3c7';
+                    ctx.strokeRect(x*ukuranKotak, y*ukuranKotak, ukuranKotak, ukuranKotak);
+                }
+            }
+        }
+
+        // === GAMBAR PEMAIN ===
+        function gambarPemain() {
+            ctx.fillStyle = pemain.warna;
+            ctx.shadowColor = '#2980b9';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(
+                pemain.x * ukuranKotak + ukuranKotak/2,
+                pemain.y * ukuranKotak + ukuranKotak/2,
+                ukuranKotak/3, 0, Math.PI*2
+            );
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+
+        // Tampilan awal
+        gambarLabirin();
+    </script>
+</body>
+</html>
